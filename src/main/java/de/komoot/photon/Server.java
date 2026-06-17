@@ -69,9 +69,19 @@ public class Server {
             hosts = startInternal(dataDirectory, config.getCluster());
         } else {
             hosts = config.getTransportAddresses().stream()
-                    .map(addr -> addr.split(":", 2))
-                    .map(parts -> new HttpHost("http", parts[0],
-                        parts.length > 1 ? Integer.parseInt(parts[1]) : 9201))
+                    .map(addr -> {
+                        String scheme = "http";
+                        String hostPort = addr;
+                        if (addr.startsWith("https://")) {
+                            scheme = "https";
+                            hostPort = addr.substring("https://".length());
+                        } else if (addr.startsWith("http://")) {
+                            hostPort = addr.substring("http://".length());
+                        }
+                        String[] parts = hostPort.split(":", 2);
+                        return new HttpHost(scheme, parts[0],
+                            parts.length > 1 ? Integer.parseInt(parts[1]) : 9201);
+                    })
                     .toArray(HttpHost[]::new);
         }
 
