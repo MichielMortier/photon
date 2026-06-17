@@ -1,0 +1,21 @@
+node("docker") {
+    sh "find . -mindepth 1 -delete"
+    checkout scm
+
+    stage('building') {
+        def uid = sh(script: "id -u", returnStdout: true).trim()
+        def gid = sh(script: "id -g", returnStdout: true).trim()
+        sh "install -d -m 777 -o ${uid} -g ${gid} ${WORKSPACE}/.gradle"
+        sh "chown -R ${uid}:${gid} ${WORKSPACE}/.gradle || true"
+
+        docker.image('gradle:8.12-jdk21').inside("--user ${uid}:${gid} -v ${WORKSPACE}/.gradle:/home/gradle/.gradle:z --entrypoint=") {
+            sh "./gradlew shadowJar --no-daemon"
+        }
+    }
+
+    def versionNumber = sh(script: "ls target/photon-*.jar | head -n 1 | sed 's/.*photon-\\(.*\\)\\.jar/\\1/'", returnStdout: true).trim()
+
+    def utils = load "/be-mobile/scripts/utils.groovy"
+    dockerContainer = utils.createAndPushDockerImage("geocoding-photon-api-${env.BRANCH_NAME}", "${versionNumber}", "-f build/docker/Dockerfile .")
+    manager.addBadge('https://www.shareicon.net/data/16x16/2017/02/15/878943_media_512x512.png', "Docker container: ${dockerContainer}", dockerContainer)
+}
