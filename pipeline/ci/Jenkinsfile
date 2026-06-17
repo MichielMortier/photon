@@ -15,7 +15,9 @@ node("docker") {
 
     def versionNumber = sh(script: "ls target/photon-*.jar | head -n 1 | sed 's/.*photon-\\(.*\\)\\.jar/\\1/'", returnStdout: true).trim()
 
+    sh "cp pipeline/docker/Dockerfile Dockerfile"
+
     def utils = load "/be-mobile/scripts/utils.groovy"
-    dockerContainer = utils.createAndPushDockerImage("geocoding-photon-api-${env.BRANCH_NAME}", "${versionNumber}", "-f pipeline/docker/Dockerfile .")
+    dockerContainer = utils.createAndPushDockerImage("geocoding-photon-api-${env.BRANCH_NAME}", "${versionNumber}")
     manager.addBadge('https://www.shareicon.net/data/16x16/2017/02/15/878943_media_512x512.png', "Docker container: ${dockerContainer}", dockerContainer)
 }
