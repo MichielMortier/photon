@@ -10,6 +10,9 @@ import de.komoot.photon.query.ReverseRequest;
 import de.komoot.photon.query.SimpleSearchRequest;
 import de.komoot.photon.query.StructuredSearchRequest;
 import de.komoot.photon.searcher.SearchHandler;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,15 +75,29 @@ public class Server {
                     .toArray(HttpHost[]::new);
         }
 
+        PhotonIndex.NAME = config.getIndexName();
+
         final var mapper = new JacksonJsonpMapper();
         mapper.objectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        final var transport = ApacheHttpClient5TransportBuilder
+        final var transportBuilder = ApacheHttpClient5TransportBuilder
                 .builder(hosts)
-                .setMapper(mapper)
-                .build();
+                .setMapper(mapper);
 
-        client = new OpenSearchClient(transport);
+        final String osUsername = config.getOsUsername();
+        final String osPassword = config.getOsPassword();
+        if (osUsername != null && osPassword != null) {
+            final var credentialsProvider = new BasicCredentialsProvider();
+            for (final HttpHost host : hosts) {
+                credentialsProvider.setCredentials(
+                        new AuthScope(host),
+                        new UsernamePasswordCredentials(osUsername, osPassword.toCharArray()));
+            }
+            transportBuilder.setHttpClientConfigCallback(
+                    httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+        }
+
+        client = new OpenSearchClient(transportBuilder.build());
 
         waitForReady();
     }

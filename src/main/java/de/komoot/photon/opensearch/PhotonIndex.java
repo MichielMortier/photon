@@ -1,7 +1,8 @@
 package de.komoot.photon.opensearch;
 
 public class PhotonIndex {
-    public static final String NAME = "photon";
+    // Set once at startup via PhotonDBConfig.-index; never mutated after Server init.
+    public static String NAME = "photon";
     public static final String META_DB_PROPERTIES = "PhotonProperties";
 
     private PhotonIndex() {

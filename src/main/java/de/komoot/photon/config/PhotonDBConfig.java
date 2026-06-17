@@ -2,6 +2,7 @@ package de.komoot.photon.config;
 
 import com.beust.jcommander.Parameter;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,6 +37,21 @@ public class PhotonDBConfig {
             """)
     private String cluster = "photon";
 
+    @Parameter(names = "-index", category = GROUP, placeholder = "NAME", description = """
+            Name of the OpenSearch index to read from and write to
+            """)
+    private String indexName = "photon";
+
+    @Parameter(names = "-os-username", category = GROUP, placeholder = "USER", description = """
+            Username for authentication with the external OpenSearch cluster
+            """)
+    @Nullable private String osUsername = null;
+
+    @Parameter(names = "-os-password", category = GROUP, placeholder = "PASS", description = """
+            Password for authentication with the external OpenSearch cluster
+            """)
+    @Nullable private String osPassword = null;
+
     public String getDataDirectory() {
         return this.dataDirectory;
     }
@@ -46,5 +62,17 @@ public class PhotonDBConfig {
 
     public List<String> getTransportAddresses() {
         return this.transportAddresses;
+    }
+
+    public String getIndexName() {
+        return this.indexName;
+    }
+
+    @Nullable public String getOsUsername() {
+        return this.osUsername;
+    }
+
+    @Nullable public String getOsPassword() {
+        return this.osPassword;
     }
 }
