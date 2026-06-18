@@ -68,6 +68,7 @@ public class Server {
         if (config.getTransportAddresses().isEmpty()) {
             hosts = startInternal(dataDirectory, config.getCluster());
         } else {
+            // BM CUSTOM CODE: upstream hardcoded "http"; parse scheme prefix so https:// addresses work
             hosts = config.getTransportAddresses().stream()
                     .map(addr -> {
                         String scheme = "http";
@@ -204,15 +205,13 @@ public class Server {
     }
 
     public DatabaseProperties loadFromDatabase() throws IOException {
-        var mappingResponse = client.indices().getMapping(m -> m.index(PhotonIndex.NAME));
-        // When PhotonIndex.NAME is an alias the response is keyed by the backing index name,
-        // not the alias itself — fall back to the first entry in that case.
-        var mappingRecord = mappingResponse.get(PhotonIndex.NAME);
-        if (mappingRecord == null) {
-            mappingRecord = mappingResponse.result().values().stream().findFirst()
-                    .orElseThrow(() -> new UsageException("No index mapping found for " + PhotonIndex.NAME));
-        }
-        var meta = mappingRecord.mappings().meta();
+        // BM CUSTOM CODE: use first() instead of get(NAME) — when NAME is an alias the response
+        // is keyed by the backing index name, not the alias, so get(NAME) returns null
+        var meta = client.indices()
+                .getMapping(m -> m.index(PhotonIndex.NAME))
+                .result().values().iterator().next()
+                .mappings()
+                .meta();
 
         if (!meta.containsKey(PhotonIndex.META_DB_PROPERTIES)) {
             throw new UsageException("Cannot access property meta data. Database too old?");

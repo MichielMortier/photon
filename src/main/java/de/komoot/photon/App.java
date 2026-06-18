@@ -151,7 +151,7 @@ public class App {
             esServer.recreateIndex(dbProperties);
         } catch (IOException ex) {
             LOGGER.error("Cannot initialize database", ex);
-            System.exit(1);
+            System.exit(1); // BM CUSTOM CODE: upstream used return, causing exit 0 and alias swap on empty index
         }
 
         final int maxConcurrentBulks = Math.max(1, cli.getGeneralConfig().getThreads());
@@ -171,7 +171,7 @@ public class App {
             }
         } catch (IOException ex) {
             LOGGER.error("IO error while importing", ex);
-            System.exit(1);
+            System.exit(1); // BM CUSTOM CODE: upstream used return, causing exit 0 and alias swap on empty index
         } finally {
             importThread.finish();
         }
