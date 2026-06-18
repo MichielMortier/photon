@@ -151,7 +151,7 @@ public class App {
             esServer.recreateIndex(dbProperties);
         } catch (IOException ex) {
             LOGGER.error("Cannot initialize database", ex);
-            return;
+            System.exit(1);
         }
 
         final int maxConcurrentBulks = Math.max(1, cli.getGeneralConfig().getThreads());
@@ -171,7 +171,7 @@ public class App {
             }
         } catch (IOException ex) {
             LOGGER.error("IO error while importing", ex);
-            return;
+            System.exit(1);
         } finally {
             importThread.finish();
         }
